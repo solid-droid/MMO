@@ -1,63 +1,94 @@
+let canvas;
+let engine = null;
+let scene = null;
 
-        var canvas = document.getElementById("renderCanvas");
+canvas = document.getElementById("renderCanvas");
 
-        var engine = null;
-        var scene = null;
-        var sceneToRender = null;
-        var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
-        var createScene = function () {
-    // This creates a basic Babylon Scene object (non-mesh)
-    var scene = new BABYLON.Scene(engine);
+const createScene =  () => {
+    let scene = new BABYLON.Scene(engine);
+    
+    const box = BABYLON.MeshBuilder.CreateBox("box", {height: 4, width: 4, depth: 4});
+    box.position.y = 4;
+    box.enableEdgesRendering(); 
+    box.edgesWidth = 4.0;
+    box.edgesColor = new BABYLON.Color4(0, 0, 1, 1);
 
-    // This creates and positions a free camera (non-mesh)
-    var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+    const box2 = BABYLON.MeshBuilder.CreateBox("box2", {height: 4, width: 4, depth: 4});
+    box2.position.y = 4;
+    box2.position.x = 5;
+    box2.enableEdgesRendering(); 
+    box2.edgesWidth = 4.0;
+    box2.edgesColor = new BABYLON.Color4(0, 0, 1, 1);
 
-    // This targets the camera to scene origin
-    camera.setTarget(BABYLON.Vector3.Zero());
 
-    // This attaches the camera to the canvas
+    let camera = new BABYLON.FollowCamera("camera1", new BABYLON.Vector3(45, 25, 50));
+    camera.lockedTarget = box;
+    camera.radius = 20;
     camera.attachControl(canvas, true);
 
-    // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-    var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    // camera.setTarget(BABYLON.Vector3.Zero());
+    // camera.keysUp = [];
+    // camera.keysDown = [];
+    // camera.keysLeft = [];
+    // camera.keysRight = [];
 
-    // Default intensity is 1. Let's dim the light a small amount
+    let light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0));
     light.intensity = 0.7;
-
-    // Our built-in 'sphere' shape.
-    var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 2, segments: 32}, scene);
-
-    // Move the sphere upward 1/2 its height
-    sphere.position.y = 1;
-
-    // Our built-in 'ground' shape.
-    var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
+    
+    let ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 1000, height: 1000});
 
     return scene;
 };
-                window.initFunction = async function() {               
-                    var asyncEngineCreation = async function() {
-                        try {
-                        return createDefaultEngine();
-                        } catch(e) {
-                        console.log("the available createEngine function failed. Creating the default engine instead");
-                        return createDefaultEngine();
-                        }
-                    }
 
-                    window.engine = await asyncEngineCreation();
-        if (!engine) throw 'engine should not be null.';
-        window.scene = createScene();};
-        initFunction().then(() => {sceneToRender = scene        
-            engine.runRenderLoop(function () {
-                if (sceneToRender && sceneToRender.activeCamera) {
-                    sceneToRender.render();
+const init = () => {               
+    
+    engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false});
+    if (!engine) throw 'engine should not be null.';
+
+
+    scene = createScene(); 
+
+    scene.onKeyboardObservable.add((kbInfo) => {
+		switch (kbInfo.type) {
+			case BABYLON.KeyboardEventTypes.KEYDOWN:
+				switch (kbInfo.event.key) {
+                    case "a":
+                    case "A":
+                        scene.getMeshByName("box").position.x += 0.1;
+                    break
+                    case "d":
+                    case "D":
+                        scene.getMeshByName("box").position.x -= 0.1;
+                    break
+                    case "w":
+                    case "W":
+                        scene.getMeshByName("box").position.z -= 0.1;
+                    break
+                    case "s":
+                    case "S":
+                        scene.getMeshByName("box").position.z += 0.1;
+                    break
                 }
-            });
-        });
+			break;
+		}
+	});
 
-        // Resize
-        window.addEventListener("resize", function () {
+    engine.runRenderLoop(() => {
+        if (scene && scene.activeCamera) {
+
+
+            scene.render();
+
+
+
+
+        }});
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+window.addEventListener("resize", function () {
             engine.resize();
-        });
+});
    
+init();
