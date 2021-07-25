@@ -22,8 +22,11 @@ const createScene =  () => {
 
 
     let camera = new BABYLON.FollowCamera("camera1", new BABYLON.Vector3(45, 25, 50));
+    camera.applyGravity = true;
     camera.lockedTarget = box;
     camera.radius = 20;
+    camera.fov = 1.75
+    camera.inputs.removeByType("FreeCameraMouseInput");
     camera.attachControl(canvas, true);
 
     // camera.setTarget(BABYLON.Vector3.Zero());
@@ -37,6 +40,17 @@ const createScene =  () => {
     
     let ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 1000, height: 1000});
 
+    // Skybox
+    var skybox = BABYLON.Mesh.CreateBox('skyBox', 5000.0, scene)
+    var skyboxMaterial = new BABYLON.StandardMaterial('skyBox', scene)
+    skyboxMaterial.backFaceCulling = false
+    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture('//www.babylonjs.com/assets/skybox/TropicalSunnyDay', scene)
+    skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE
+    skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0)
+    skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0)
+    skyboxMaterial.disableLighting = true
+    skybox.material = skyboxMaterial
+
     return scene;
 };
 
@@ -47,31 +61,6 @@ const init = () => {
 
 
     scene = createScene(); 
-
-    scene.onKeyboardObservable.add((kbInfo) => {
-		switch (kbInfo.type) {
-			case BABYLON.KeyboardEventTypes.KEYDOWN:
-				switch (kbInfo.event.key) {
-                    case "a":
-                    case "A":
-                        scene.getMeshByName("box").position.x += 0.1;
-                    break
-                    case "d":
-                    case "D":
-                        scene.getMeshByName("box").position.x -= 0.1;
-                    break
-                    case "w":
-                    case "W":
-                        scene.getMeshByName("box").position.z -= 0.1;
-                    break
-                    case "s":
-                    case "S":
-                        scene.getMeshByName("box").position.z += 0.1;
-                    break
-                }
-			break;
-		}
-	});
 
     engine.runRenderLoop(() => {
         if (scene && scene.activeCamera) {
@@ -91,4 +80,14 @@ window.addEventListener("resize", function () {
             engine.resize();
 });
    
+$(window).keydown((e) => {
+    switch(e.code) {
+        case 'KeyW' : scene.getMeshByName("box").position.z-=0.1; break;
+        case 'KeyA' : scene.getMeshByName("box").position.x+=0.1; break;
+        case 'KeyD' : scene.getMeshByName("box").position.x-=0.1; break;
+        case 'KeyS' : scene.getMeshByName("box").position.z+=0.1; break;
+
+    }
+});
+
 init();
